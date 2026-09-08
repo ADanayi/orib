@@ -13,6 +13,7 @@ BG = "#F5F5F5"
 TEXT = "#212121"
 BORDER = "#BDBDBD"
 
+
 def make_group(title, layout):
     gb = QGroupBox(title)
     gb.setStyleSheet(f"""
@@ -27,6 +28,13 @@ def make_group(title, layout):
             subcontrol-origin: margin;
             left: 10px;
             padding: 0 5px;
+        }}
+        QGroupBox:disabled {{
+            color: #888888;
+            border: 1px solid #CCCCCC;
+        }}
+        QGroupBox::title:disabled {{
+            color: #888888;
         }}
     """)
     gb.setLayout(layout)

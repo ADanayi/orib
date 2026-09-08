@@ -1,0 +1,9 @@
+"""
+Sample usage of the generated Detector.
+"""
+
+from detector import detector
+
+print("Component name:", detector.name)
+print("Model width:", detector.model_width)
+detector.model.summary()

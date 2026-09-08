@@ -6,15 +6,22 @@
  * copyright 2026
 """
 
+import os
+from pathlib import Path
+
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QTabWidget
 )
+
 from .dataAutoencoder import DataAutoencoderTab
 from .detector import DetectorTab
 from .adversarial import AdversarialTab
 from .output import OutputTab
 from .about import AboutTab
 from .utils import BG, TEXT
+
+# Assuming the generator is in orib/gen/code_generator.py
+from gen import CodeGenerator
 
 
 class MainWindow(QMainWindow):
@@ -59,45 +66,58 @@ class MainWindow(QMainWindow):
             self.output_tab.log_area.append("⚠ Please specify an output directory.")
             return
 
-        script_path = os.path.join(out_dir, "train_belt.py")
-        code = self._generate_script_content()
+        # Collect parameters from UI tabs
+        params = self._collect_parameters()
+
+        # Path to the BELT component directory
+        belt_dir = Path(__file__).parent.parent / "belt"
+        generator = CodeGenerator(belt_dir)
+
+        # Optional NTB file
+        ntb_file = self.detector_tab.edit_ntb_path.text().strip()
+        ntb_source = ntb_file if ntb_file else None
+
         try:
-            with open(script_path, 'w', encoding='utf-8') as f:
-                f.write(code)
-            self.output_tab.log_area.append(f"✓ Training script saved to: {script_path}")
+            generator.generate(
+                output_dir=out_dir,
+                parameters=params,
+                ntb_source=ntb_source
+            )
+            self.output_tab.log_area.append(
+                f"✓ Project generated successfully in: {out_dir}"
+            )
         except Exception as e:
-            self.output_tab.log_area.append(f"✗ Error writing file: {e}")
+            self.output_tab.log_area.append(f"✗ Error generating project: {e}")
 
-    def _generate_script_content(self):
-        # Stub – to be expanded later
-        return f"""#!/usr/bin/env python3
-\"\"\"Auto-generated ORIB training script.\"\"\"
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras as K
-
-# ----- Parameters -----
-SAMPLES = {self.data_tab.sp_samples.value()}
-CHANNELS = {self.data_tab.sp_channels.value()}
-E1, E2, N = {self.data_tab.sp_E1.value()}, {self.data_tab.sp_E2.value()}, {self.data_tab.sp_N.value()}
-AE_EPOCHS = {self.data_tab.sp_ae_epochs.value()}
-AE_BATCH = {self.data_tab.sp_ae_batch.value()}
-
-DET_WIDTH = "{self.detector_tab.cmb_width.currentText()}"
-DET_D, DET_F, DET_NF, DET_NS = {self.detector_tab.sp_d.value()}, {self.detector_tab.sp_f.value()}, {self.detector_tab.sp_Nf.value()}, {self.detector_tab.sp_Ns.value()}
-DET_EPOCHS = {self.detector_tab.sp_det_epochs.value()}
-DET_LR = {self.detector_tab.sp_det_lr.value()}
-
-DA_LAMBDA_CLS = {self.adversarial_tab.sp_da_lambda_cls.value()}
-DA_LAMBDA_RECON = {self.adversarial_tab.sp_da_lambda_recon.value()}
-DA_LAMBDA_REG = {self.adversarial_tab.sp_da_lambda_reg.value()}
-DA_EPOCHS = {self.adversarial_tab.sp_da_epochs.value()}
-DA_LR = {self.adversarial_tab.sp_da_lr.value()}
-
-DB_LAMBDA_RECON = {self.adversarial_tab.sp_db_lambda_recon.value()}
-DB_LAMBDA_UNIF = {self.adversarial_tab.sp_db_lambda_unif.value()}
-DB_EPOCHS = {self.adversarial_tab.sp_db_epochs.value()}
-DB_LR = {self.adversarial_tab.sp_db_lr.value()}
-
-print("Parameters loaded. Replace with full training loop.")
-"""
+    def _collect_parameters(self):
+        """Collect all necessary parameters from UI tabs."""
+        return {
+            # Detector hyperparameters
+            "downscale_factor": self.detector_tab.sp_d.value(),
+            "filters_per_channel": self.detector_tab.sp_Nf.value(),
+            "spatial_filters": self.detector_tab.sp_Ns.value(),
+            "ntb_factor": self.detector_tab.sp_f.value(),
+            # Input shape
+            "input_shape_samples": self.data_tab.sp_samples.value(),
+            "input_shape_channels": self.data_tab.sp_channels.value(),
+            "num_classes": 2,
+            # Detector training
+            "learning_rate": self.detector_tab.sp_det_lr.value(),
+            # Autoencoder parameters (for future use)
+            "E1": self.data_tab.sp_E1.value(),
+            "E2": self.data_tab.sp_E2.value(),
+            "N": self.data_tab.sp_N.value(),
+            "ae_epochs": self.data_tab.sp_ae_epochs.value(),
+            "ae_batch": self.data_tab.sp_ae_batch.value(),
+            "ae_lr": self.data_tab.sp_ae_lr.value(),
+            # Adversarial parameters (for future use)
+            "da_lambda_cls": self.adversarial_tab.sp_da_lambda_cls.value(),
+            "da_lambda_recon": self.adversarial_tab.sp_da_lambda_recon.value(),
+            "da_lambda_reg": self.adversarial_tab.sp_da_lambda_reg.value(),
+            "da_epochs": self.adversarial_tab.sp_da_epochs.value(),
+            "da_lr": self.adversarial_tab.sp_da_lr.value(),
+            "db_lambda_recon": self.adversarial_tab.sp_db_lambda_recon.value(),
+            "db_lambda_unif": self.adversarial_tab.sp_db_lambda_unif.value(),
+            "db_epochs": self.adversarial_tab.sp_db_epochs.value(),
+            "db_lr": self.adversarial_tab.sp_db_lr.value(),
+        }

@@ -53,7 +53,7 @@ class AdversarialTab(QWidget):
         da_layout.addRow("λ_recon", self.sp_da_lambda_recon)
         da_layout.addRow("λ_reg", self.sp_da_lambda_reg)
         da_layout.addRow("Epochs", self.sp_da_epochs)
-        da_layout.addRow("LR", self.sp_da_lr)
+        da_layout.addRow("Learning Rate", self.sp_da_lr)
 
         layout.addWidget(make_group("Dᵃ (Alpha Demodulator)", da_layout))
 
@@ -82,7 +82,7 @@ class AdversarialTab(QWidget):
         db_layout.addRow("λ_recon", self.sp_db_lambda_recon)
         db_layout.addRow("λ_unif", self.sp_db_lambda_unif)
         db_layout.addRow("Epochs", self.sp_db_epochs)
-        db_layout.addRow("LR", self.sp_db_lr)
+        db_layout.addRow("Learning Rate", self.sp_db_lr)
 
         layout.addWidget(make_group("Dᵇ (Beta Demodulator)", db_layout))
         layout.addStretch()
